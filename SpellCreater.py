@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from PIL import Image, ImageTk
+import os
 
 # Пары: отображаемое имя (русское) -> кодовое имя (латинское)
 COMPONENTS = {
@@ -63,44 +65,14 @@ COMPONENTS = {
         "существо (es)": "es", "если (si)": "si", "то (modo)": "modo", "иначе (aliver)": "aliver"
     }
 }
+# [Оставляем COMPONENTS без изменений]
 
 class Spell:
-    def __init__(self, power, form, target, modifiers, condition=None):
-        self.power = power
-        self.form = form
-        self.target = target
-        self.modifiers = modifiers
-        self.condition = condition
-
-    def _format(self, items):
-        return " et ".join(items)
-
-    def _build_condition(self):
-        if not self.condition:
-            return ""
-        si, modo, *aliver = self.condition
-        cond = f"si {si} modo {modo}"
-        if aliver:
-            cond += f" aliver {aliver[0]}"
-        return cond
+    def __init__(self, components):
+        self.components = components  # Список компонентов в произвольном порядке
 
     def cast(self):
-        parts = []
-        if self.condition:
-            parts.append(self._build_condition())
-
-        base = ["tu"]
-        if self.power:
-            base.append(self._format(self.power))
-        if self.form:
-            base.append(self._format(self.form))
-        if self.target:
-            base.append(self._format(self.target))
-        if self.modifiers:
-            base.append(self._format(self.modifiers))
-
-        parts.append(" ".join(base))
-        return " ".join(parts)
+        return " ".join(self.components)
 
 class SpellGUI:
     def __init__(self, root):
@@ -109,13 +81,21 @@ class SpellGUI:
 
         self.inputs = {}
         self.index_to_code = {}
+        self.spell_components = []  # Список для хранения порядка компонентов (латинские коды)
+        self.spell_display = []   # Список для хранения отображаемых русских названий
+        self.history = []         # Стек для истории действий
+        
+        # Панель выбора компонентов (слева)
+        component_frame = tk.Frame(root)
+        component_frame.grid(row=0, column=0, sticky='nsew')
 
         for idx, (category, options) in enumerate(COMPONENTS.items()):
-            label = tk.Label(root, text=category)
+            label = tk.Label(component_frame, text=category)
             label.grid(row=idx, column=0, sticky='nw')
 
-            listbox = tk.Listbox(root, selectmode=tk.MULTIPLE, exportselection=False, height=6)
+            listbox = tk.Listbox(component_frame, selectmode=tk.SINGLE, exportselection=False, height=6)
             listbox.grid(row=idx, column=1, sticky='nsew')
+            listbox.bind('<Double-1>', lambda e, c=category: self.add_component(c))
             self.inputs[category] = listbox
             self.index_to_code[category] = {}
 
@@ -123,27 +103,126 @@ class SpellGUI:
                 listbox.insert(tk.END, rus)
                 self.index_to_code[category][i] = lat
 
-        self.cast_button = tk.Button(root, text="Сотворить Заклинание", command=self.cast_spell)
-        self.cast_button.grid(row=len(COMPONENTS), column=0, columnspan=2)
+        # Панель заклинания (справа)
+        spell_frame = tk.Frame(root)
+        spell_frame.grid(row=0, column=1, sticky='nsew')
+        
+        self.canvas = tk.Canvas(spell_frame, height=100)
+        self.canvas.pack(fill='x', padx=5, pady=5)
+        
+        # Кнопки и вывод
+        button_frame = tk.Frame(root)
+        button_frame.grid(row=1, column=0, columnspan=2, sticky='ew')
+        
+        self.cast_button = tk.Button(button_frame, text="Сотворить Заклинание", command=self.cast_spell)
+        self.cast_button.pack(side=tk.LEFT, padx=5, pady=5)
+        
+        self.undo_button = tk.Button(button_frame, text="Отменить", command=self.undo_action)
+        self.undo_button.pack(side=tk.LEFT, padx=5, pady=5)
+        
+        self.clear_button = tk.Button(button_frame, text="Очистить", command=self.clear_spell)
+        self.clear_button.pack(side=tk.LEFT, padx=5, pady=5)
 
         self.output = tk.Text(root, height=4, wrap='word')
-        self.output.grid(row=len(COMPONENTS) + 1, column=0, columnspan=2, sticky='nsew')
+        self.output.grid(row=2, column=0, columnspan=2, sticky='nsew')
 
-    def get_selection(self, name):
-        listbox = self.inputs[name]
-        selected_indices = listbox.curselection()
-        return [self.index_to_code[name][i] for i in selected_indices]
+    def add_component(self, category):
+        listbox = self.inputs[category]
+        selected_idx = listbox.curselection()
+        if not selected_idx:
+            return
+        
+        idx = selected_idx[0]
+        code = self.index_to_code[category][idx]
+        name = listbox.get(idx)
+        
+        # Сохраняем текущее состояние в историю
+        self.history.append(('add', len(self.spell_components), code, name))
+        
+        # Добавляем компонент в заклинание
+        self.spell_components.append(code)
+        self.spell_display.append(name)
+        self.update_spell_display()
+
+    def update_spell_display(self):
+        self.canvas.delete("all")
+        x_pos = 10
+        
+        for i, name in enumerate(self.spell_display):
+            # Отображаем русский текст
+            text_id = self.canvas.create_text(x_pos, 50, text=name, anchor='w', font=("Arial", 10))
+            
+            # Добавляем подсказку (латинский код)
+            code = self.spell_components[i]
+            self.canvas.tag_bind(text_id, "<Enter>", lambda e, t=code: self.show_tooltip(e, t))
+            self.canvas.tag_bind(text_id, "<Leave>", lambda e: self.hide_tooltip())
+            
+            # Возможность удаления по правому клику
+            self.canvas.tag_bind(text_id, "<Button-3>", lambda e, idx=i: self.remove_component(idx))
+            
+            x_pos += self.canvas.bbox(text_id)[2] - self.canvas.bbox(text_id)[0] + 10
+
+    def show_tooltip(self, event, text):
+        x, y = event.x + 10, event.y + 10
+        self.tooltip = tk.Toplevel(self.root)
+        self.tooltip.wm_overrideredirect(True)
+        self.tooltip.wm_geometry(f"+{self.root.winfo_x() + x}+{self.root.winfo_y() + y}")
+        label = tk.Label(self.tooltip, text=text, background="yellow", relief="solid", borderwidth=1)
+        label.pack()
+
+    def hide_tooltip(self):
+        if hasattr(self, 'tooltip'):
+            self.tooltip.destroy()
+            del self.tooltip
+
+    def remove_component(self, idx):
+        if idx < 0 or idx >= len(self.spell_components):
+            return
+        
+        # Сохраняем действие в историю
+        self.history.append(('remove', idx, self.spell_components[idx], self.spell_display[idx]))
+        
+        # Удаляем компонент
+        self.spell_components.pop(idx)
+        self.spell_display.pop(idx)
+        self.update_spell_display()
+
+    def undo_action(self):
+        if not self.history:
+            return
+        
+        action, idx, code, name = self.history.pop()
+        
+        if action == 'add':
+            # Отмена добавления
+            if idx < len(self.spell_components):
+                self.spell_components.pop(idx)
+                self.spell_display.pop(idx)
+        elif action == 'remove':
+            # Отмена удаления
+            self.spell_components.insert(idx, code)
+            self.spell_display.insert(idx, name)
+        
+        self.update_spell_display()
+
+    def clear_spell(self):
+        # Сохраняем все компоненты в историю как одно действие
+        if self.spell_components:
+            self.history.append(('clear', 0, self.spell_components.copy(), self.spell_display.copy()))
+        
+        self.spell_components.clear()
+        self.spell_display.clear()
+        self.update_spell_display()
+        self.output.delete(1.0, tk.END)
 
     def cast_spell(self):
-        power = self.get_selection("Слова силы")
-        form = self.get_selection("Слова формы")
-        target = self.get_selection("Слова цели")
-        modifiers = self.get_selection("Слова дополнения")
-        condition = self.get_selection("Условия и прочее")
-
-        spell = Spell(power, form, target, modifiers, condition if condition else None)
+        if not self.spell_components:
+            messagebox.showwarning("Ошибка", "Добавьте хотя бы один компонент!")
+            return
+        
+        spell = Spell(self.spell_components)
         result = spell.cast()
-
+        
         self.output.delete(1.0, tk.END)
         self.output.insert(tk.END, result)
 
