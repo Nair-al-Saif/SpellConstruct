@@ -16,6 +16,7 @@ class SpellGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Ars Magicka: Конструктор Заклинаний")
+        self.root.geometry("800x600")  # Устанавливаем начальный размер окна
 
         self.inputs = {}
         self.index_to_code = {}
@@ -23,18 +24,32 @@ class SpellGUI:
         self.spell_components = []
         self.spell_display = []
         self.history = []
-
+        
+        self.update_component_data()
+        
         # Создаем общий словарь для поиска
         for category, options in COMPONENTS.items():
             for rus, lat in options.items():
                 self.rus_to_code[rus] = lat
 
-        # Верхняя часть: компоненты в блоках
-        self.component_frame = tk.Frame(root)
-        self.component_frame.pack(side=tk.TOP, fill='x', padx=5, pady=5)
+        # Верхняя часть: компоненты в блоках с прокруткой
+        self.component_container = tk.Frame(root)
+        self.component_container.pack(side=tk.TOP, fill='x', padx=5, pady=5)
 
+        self.component_canvas = tk.Canvas(self.component_container, height=200)  # Фиксированная высота для блоков
+        self.component_scrollbar = tk.Scrollbar(self.component_container, orient="horizontal", 
+                                              command=self.component_canvas.xview)
+        self.component_canvas.configure(xscrollcommand=self.component_scrollbar.set)
+
+        self.component_frame = tk.Frame(self.component_canvas)
+        self.component_canvas.create_window((0, 0), window=self.component_frame, anchor="nw")
+
+        self.component_scrollbar.pack(side=tk.BOTTOM, fill='x')
+        self.component_canvas.pack(side=tk.TOP, fill='x')
         self.create_component_blocks()
 
+        # Привязка событий для обновления области прокрутки
+        self.component_frame.bind("<Configure>", lambda e: self.component_canvas.configure(scrollregion=self.component_canvas.bbox("all")))
         # Средняя часть: область заклинания
         self.spell_frame = tk.Frame(root)
         self.spell_frame.pack(fill='x', padx=5, pady=5)
@@ -70,6 +85,12 @@ class SpellGUI:
         # Вывод
         self.output = tk.Text(self.bottom_frame, height=4, wrap='word')
         self.output.pack(fill='x', pady=5)
+
+    def update_component_data(self):
+        self.rus_to_code.clear()
+        for category, options in COMPONENTS.items():
+            for rus, lat in options.items():
+                self.rus_to_code[rus] = lat
 
     def create_component_blocks(self):
         for idx, (category, options) in enumerate(COMPONENTS.items()):
