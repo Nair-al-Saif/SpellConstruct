@@ -14,16 +14,17 @@ class Spell:
             return ""
         
         result = []
+        math_digits = {"Nulla", "Uno", "Dos", "Tres", "Quadro", "Quinque", "Six", "Septem", "Octo", "Novem"}
         i = 0
         while i < len(self.components):
             current = self.components[i]
             
             # Проверяем, является ли текущий компонент цифрой из категории "Математика"
-            if current.isdigit():
+            if current in math_digits:
                 number = current
                 # Собираем все следующие цифры в одно число
                 j = i + 1
-                while j < len(self.components) and self.components[j].isdigit():
+                while j < len(self.components) and self.components[j] in math_digits:
                     number += self.components[j]
                     j += 1
                 result.append(number)
