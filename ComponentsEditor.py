@@ -2,6 +2,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from Components import COMPONENTS
+import os
 
 class ComponentEditor:
     def __init__(self, parent, update_callback):
@@ -59,6 +60,7 @@ class ComponentEditor:
         self.component_listbox.insert(tk.END, rus)
         self.rus_entry.delete(0, tk.END)
         self.lat_entry.delete(0, tk.END)
+        self.save_to_file()  # Сохраняем изменения в файл
 
     def remove_component(self):
         selection = self.component_listbox.curselection()
@@ -70,7 +72,25 @@ class ComponentEditor:
         rus = self.component_listbox.get(selection[0])
         del COMPONENTS[category][rus]
         self.component_listbox.delete(selection[0])
+        self.save_to_file()  # Сохраняем изменения в файл
+
+    def save_to_file(self):
+        """Сохраняет обновленный словарь COMPONENTS в файл Components.py"""
+        try:
+            with open("Components.py", "w", encoding="utf-8") as f:
+                f.write("# Components.py\n")
+                f.write("COMPONENTS = {\n")
+                for category, components in COMPONENTS.items():
+                    f.write(f'    "{category}": {{\n')
+                    for rus, lat in components.items():
+                        f.write(f'        "{rus}": "{lat}",\n')
+                    f.write("    },\n")
+                f.write("}\n")
+            # messagebox.showinfo("Успех", "Изменения сохранены в файл Components.py")
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось сохранить файл: {str(e)}")
 
     def save_and_close(self):
+        self.save_to_file()  # Сохраняем изменения перед закрытием
         self.update_callback()  # Обновляем основное окно
         self.window.destroy()
