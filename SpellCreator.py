@@ -10,12 +10,24 @@ class Spell:
         self.components = components
 
     def cast(self):
-        return " ".join(self.components)
+        if not self.components:
+            return ""
+        
+        result = []
+        for i, component in enumerate(self.components):
+            # Если слово заканчивается на "'", присоединяем его к следующему без пробела
+            if component.endswith("'") and i + 1 < len(self.components):
+                result.append(component + self.components[i + 1])
+            # Если предыдущее слово не заканчивалось на "'", добавляем текущее с пробелом
+            elif i == 0 or not self.components[i - 1].endswith("'"):
+                result.append(component)
+        
+        return " ".join(result)
 
 class SpellGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("Ars Magicka: Конструктор Заклинаний")
+        self.root.title("Конструктор Заклинаний")
         self.root.geometry("800x600")  # Устанавливаем начальный размер окна
 
         self.inputs = {}
@@ -37,8 +49,7 @@ class SpellGUI:
         self.component_container.pack(side=tk.TOP, fill='x', padx=5, pady=5)
 
         self.component_canvas = tk.Canvas(self.component_container, height=200)  # Фиксированная высота для блоков
-        self.component_scrollbar = tk.Scrollbar(self.component_container, orient="horizontal", 
-                                              command=self.component_canvas.xview)
+        self.component_scrollbar = tk.Scrollbar(self.component_container, orient="horizontal", command=self.component_canvas.xview)
         self.component_canvas.configure(xscrollcommand=self.component_scrollbar.set)
 
         self.component_frame = tk.Frame(self.component_canvas)
@@ -71,6 +82,8 @@ class SpellGUI:
         self.clear_button.pack(side=tk.LEFT, padx=5, pady=5)
         self.edit_button = tk.Button(self.button_frame, text="Редактировать компоненты", command=self.open_editor)
         self.edit_button.pack(side=tk.LEFT, padx=5, pady=5)
+        self.copy_button = tk.Button(self.button_frame, text="Скопировать", command=self.copy_spell)
+        self.copy_button.pack(side=tk.LEFT, padx=5, pady=5)
 
         # Поиск
         self.search_frame = tk.Frame(self.bottom_frame)
@@ -224,6 +237,17 @@ class SpellGUI:
         result = spell.cast()
         self.output.delete(1.0, tk.END)
         self.output.insert(tk.END, result)
+        
+    def copy_spell(self):
+        spell_text = self.output.get(1.0, tk.END).strip()
+        if not spell_text:
+            messagebox.showwarning("Ошибка", "Сначала сотворите заклинание!")
+            return
+        
+        self.root.clipboard_clear()
+        self.root.clipboard_append(spell_text)
+        self.root.update()  # Обновляем буфер обмена
+        messagebox.showinfo("Успех", "Заклинание скопировано в буфер обмена!")
 
 def open_spell_gui():
     spell_window = tk.Toplevel()
