@@ -14,13 +14,30 @@ class Spell:
             return ""
         
         result = []
-        for i, component in enumerate(self.components):
-            # Если слово заканчивается на "'", присоединяем его к следующему без пробела
-            if component.endswith("'") and i + 1 < len(self.components):
-                result.append(component + self.components[i + 1])
-            # Если предыдущее слово не заканчивалось на "'", добавляем текущее с пробелом
+        i = 0
+        while i < len(self.components):
+            current = self.components[i]
+            
+            # Проверяем, является ли текущий компонент цифрой из категории "Математика"
+            if current.isdigit():
+                number = current
+                # Собираем все следующие цифры в одно число
+                j = i + 1
+                while j < len(self.components) and self.components[j].isdigit():
+                    number += self.components[j]
+                    j += 1
+                result.append(number)
+                i = j
+            # Обрабатываем слова с "'", присоединяя их к следующему слову
+            elif current.endswith("'") and i + 1 < len(self.components):
+                result.append(current + self.components[i + 1])
+                i += 2
+            # Добавляем обычные слова с пробелом (если предыдущее не заканчивалось на "'")
             elif i == 0 or not self.components[i - 1].endswith("'"):
-                result.append(component)
+                result.append(current)
+                i += 1
+            else:
+                i += 1  # Пропускаем, если это слово уже присоединено к предыдущему
         
         return " ".join(result)
 
