@@ -217,6 +217,7 @@ class SpellGUI:
         self.history.append(('remove', idx, self.spell_components[idx], self.spell_display[idx]))
         self.spell_components.pop(idx)
         self.spell_display.pop(idx)
+        self.hide_tooltip()
         self.update_spell_display()
 
     def undo_action(self):
