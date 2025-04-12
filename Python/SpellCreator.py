@@ -186,9 +186,10 @@ class SpellGUI:
             return
         
         # Добавляем произвольный текст как компонент
-        self.history.append(('add', len(self.spell_components), custom_text, custom_text))
-        self.spell_components.append(custom_text)
-        self.spell_display.append(custom_text)
+        formated_text = f"[{custom_text}]"
+        self.history.append(('add', len(self.spell_components), formated_text, formated_text))
+        self.spell_components.append(formated_text)
+        self.spell_display.append(formated_text)
         self.update_spell_display()
         self.custom_var.set("")  # Очищаем поле ввода
 

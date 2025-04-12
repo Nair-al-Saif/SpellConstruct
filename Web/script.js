@@ -256,9 +256,10 @@ function addCustomText() {
         return;
     }
     // Добавляем произвольный текст как компонент
-    history.push(['add', spellComponents.length, customText, customText]);
-    spellComponents.push(customText);
-    spellDisplay.push(customText);
+	const formattedText = `[${customText}]`;
+    history.push(['add', spellComponents.length, formattedText, formattedText]);
+    spellComponents.push(formattedText);
+    spellDisplay.push(formattedText);
     updateSpellDisplay();
     document.getElementById('customInput').value = ''; // Очищаем поле ввода
 }
