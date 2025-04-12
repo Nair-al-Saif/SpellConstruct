@@ -1,0 +1,16 @@
+body{font-family: Arial, sans-serif; margin: 0; padding: 10px; background-color: #f4f4f4;}
+.container{max-width: 800px; margin: auto;}
+.component-container{display: flex; overflow-x: auto; padding: 10px; background-color: #fff; border: 1px solid #ccc; margin-bottom: 10px;}
+.component-block{flex: 0 0 auto; margin-right: 10px; border: 1px solid #999; padding: 5px; background-color: #e8e8e8;}
+.component-block h3{margin: 0 0 5px; font-size: 14px;}
+.component-block select{width: 150px; height: 150px; font-size: 12px;}
+.spell-area{height: 100px; background-color: #fff; border: 1px solid #ccc; margin-bottom: 10px; padding: 10px; display: flex; flex-wrap: wrap; align-content: center;}
+.spell-component{display: inline-block; padding: 5px 10px; margin: 2px; background-color: #d0e8ff; border: 1px solid #99ccff; cursor: move; position: relative;}
+.spell-component:hover .tooltip{display: block;}
+.tooltip{display: none; position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background-color: yellow; border: 1px solid #000; padding: 2px 5px; font-size: 12px; z-index: 10;}
+.bottom-frame{background-color: #fff; padding: 10px; border: 1px solid #ccc;}
+.button-frame{margin-bottom: 10px;}
+.button-frame button{margin-right: 10px; padding: 5px 10px;}
+.search-frame{display: flex; align-items: center; margin-bottom: 10px;}
+.search-frame input{flex: 1; margin: 0 10px; padding: 5px;}
+.output{width: 100%; height: 60px; resize: none; font-family: Arial, sans-serif;}
