@@ -113,6 +113,16 @@ class SpellGUI:
         self.search_entry.bind('<Return>', lambda e: self.add_by_search())
         tk.Button(self.search_frame, text="Добавить", command=self.add_by_search).pack(side=tk.LEFT, padx=5)
 
+        # Новое поле для ввода произвольного текста
+        self.custom_frame = tk.Frame(self.bottom_frame)
+        self.custom_frame.pack(fill='x', pady=5)
+        tk.Label(self.custom_frame, text="Произвольное слово:").pack(side=tk.LEFT)
+        self.custom_var = tk.StringVar()
+        self.custom_entry = tk.Entry(self.custom_frame, textvariable=self.custom_var)
+        self.custom_entry.pack(side=tk.LEFT, fill='x', expand=True)
+        self.custom_entry.bind('<Return>', lambda e: self.add_custom_text())
+        tk.Button(self.custom_frame, text="Добавить слово", command=self.add_custom_text).pack(side=tk.LEFT, padx=5)
+
         # Вывод
         self.output = tk.Text(self.bottom_frame, height=4, wrap='word')
         self.output.pack(fill='x', pady=5)
@@ -168,6 +178,19 @@ class SpellGUI:
         self.spell_components.append(code)
         self.spell_display.append(name)
         self.update_spell_display()
+
+    def add_custom_text(self):
+        custom_text = self.custom_var.get().strip()
+        if not custom_text:
+            messagebox.showwarning("Ошибка", "Введите слово для заклинания!")
+            return
+        
+        # Добавляем произвольный текст как компонент
+        self.history.append(('add', len(self.spell_components), custom_text, custom_text))
+        self.spell_components.append(custom_text)
+        self.spell_display.append(custom_text)
+        self.update_spell_display()
+        self.custom_var.set("")  # Очищаем поле ввода
 
     def add_by_search(self):
         search_text = self.search_var.get().strip()
