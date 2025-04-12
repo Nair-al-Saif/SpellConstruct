@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Конструктор Заклинаний</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="row">
+		<!-- загрузка словаря -->
+		<div style="margin-bottom: 10px;">
+            <label>Загрузить components.json: </label>
+            <input type="file" id="jsonInput" accept=".json">
+        </div>
+        <!-- Верхняя часть: блоки компонентов -->
+        <div class="component-container" id="componentContainer"></div>
+
+        <!-- Средняя часть: область заклинания -->
+        <div class="spell-area" id="spellArea"></div>
+
+        <!-- Нижняя часть: кнопки, поиск, вывод -->
+        <div class="bottom-frame">
+            <div class="button-frame">
+                <button onclick="castSpell()">Сотворить Заклинание</button>
+                <button onclick="undoAction()">Отменить</button>
+                <button onclick="clearSpell()">Очистить</button>
+                <button onclick="openEditor()">Редактировать компоненты</button>
+                <button onclick="copySpell()">Скопировать</button>
+            </div>
+            <div class="search-frame">
+                <label>Поиск:</label>
+                <input type="text" id="searchInput">
+                <button onclick="addBySearch()">Добавить</button>
+            </div>
+            <textarea class="output" id="output" readonly></textarea>
+        </div>
+    </div>
+
+<script src="script.js"></script>
+</body>
+</html>
