@@ -150,38 +150,49 @@ function removeComponent(idx) {
 	updateSpellDisplay();
 }
 
-// Логика создания заклинания (аналог Spell.cast)
+// Логика создания заклинания 
+// Модифицированная функция castSpell для обработки произвольного текста
 function castSpell() {
-	if (!spellComponents.length) {
-		alert('Добавьте хотя бы один компонент!');
-		return;
-	}
-	const mathDigits = new Set(['Nulla', 'Uno', 'Dos', 'Tres', 'Quadro', 'Quinque', 'Six', 'Septem', 'Octo', 'Novem']);
-	let result = [];
-	let i = 0;
-	while (i < spellComponents.length) {
-		let current = spellComponents[i];
-		if (mathDigits.has(current)) {
-			let number = current;
-			let j = i + 1;
-			while (j < spellComponents.length && mathDigits.has(spellComponents[j])) {
-				number += spellComponents[j];
-				j++;
-			}
-			result.push(number);
-			i = j;
-		} else if (current.endsWith("'") && i + 1 < spellComponents.length) {
-			result.push(current + spellComponents[i + 1]);
-			i += 2;
-		} else if (i === 0 || !spellComponents[i - 1].endsWith("'")) {
-			result.push(current);
-			i++;
-		} else {
-			i++;
-		}
-	}
-	const output = document.getElementById('output');
-	output.value = result.join(' ');
+    if (!spellComponents.length) {
+        alert('Добавьте хотя бы один компонент!');
+        return;
+    }
+    const mathDigits = new Set(['Nulla', 'Uno', 'Dos', 'Tres', 'Quadro', 'Quinque', 'Six', 'Septem', 'Octo', 'Novem']);
+    let result = [];
+    let i = 0;
+    while (i < spellComponents.length) {
+        let current = spellComponents[i];
+        if (mathDigits.has(current)) {
+            let number = current;
+            let j = i + 1;
+            while (j < spellComponents.length && mathDigits.has(spellComponents[j])) {
+                number += spellComponents[j];
+                j++;
+            }
+            result.push(number);
+            i = j;
+        } else if (current.endsWith("'") && i + 1 < spellComponents.length) {
+            result.push(current + spellComponents[i + 1]);
+            i += 2;
+        } else if (i === 0 || !spellComponents[i - 1].endsWith("'")) {
+            result.push(current); // Произвольный текст обрабатывается как обычный компонент
+            i++;
+        } else {
+            i++;
+        }
+    }
+    const output = document.getElementById('output');
+    output.value = result.join(' ');
+}
+
+// Инициализация обработчика для поля ввода произвольного текста
+function initCustomInput() {
+    const customInput = document.getElementById('customInput');
+    customInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            addCustomText();
+        }
+    });
 }
 
 // Отмена действия
@@ -237,10 +248,26 @@ function openEditor() {
 	// Здесь можно добавить вызов модального окна для редактирования COMPONENTS
 }
 
+// Новая функция для добавления произвольного текста в заклинание
+function addCustomText() {
+    const customText = document.getElementById('customInput').value.trim();
+    if (!customText) {
+        alert('Введите слово для заклинания!');
+        return;
+    }
+    // Добавляем произвольный текст как компонент
+    history.push(['add', spellComponents.length, customText, customText]);
+    spellComponents.push(customText);
+    spellDisplay.push(customText);
+    updateSpellDisplay();
+    document.getElementById('customInput').value = ''; // Очищаем поле ввода
+}
+
 // Инициализация
 loadComponents()
 initData();
 createComponentBlocks();
+initCustomInput();
 
 // Обработка Enter в поиске
 document.getElementById('searchInput').addEventListener('keypress', (e) => {
